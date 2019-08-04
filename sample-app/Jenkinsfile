@@ -34,7 +34,7 @@ spec:
   volumes:
   - name: maven
     persistentVolumeClaim:
-      claimName: jenkins-release
+      claimName: maven-cache-pvc
   - name: docker
     hostPath:
       path: /var/run/docker.sock
