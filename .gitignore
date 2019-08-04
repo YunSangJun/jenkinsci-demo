@@ -1,0 +1,31 @@
+sample-app/HELP.md
+sample-app/target/
+! sample-app/.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**
+!**/src/test/**
+
+### STS ###
+sample-app/.apt_generated
+sample-app/.classpath
+sample-app/.factorypath
+sample-app/.project
+sample-app/.settings
+sample-app/.springBeans
+sample-app/.sts4-cache
+
+### IntelliJ IDEA ###
+sample-app/.idea
+sample-app/*.iws
+sample-app/*.iml
+sample-app/*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+sample-app/build/
+
+### VS Code ###
+sample-app/.vscode/
