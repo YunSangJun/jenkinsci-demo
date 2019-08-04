@@ -1,28 +1,57 @@
 
 def dockerCredential = "docker_credential"
 def imageTag = "DOCKER_REPOSITORY:${env.BRANCH_NAME}.${env.BUILD_NUMBER}"
-def mavenCacheVolume = "jenkins-release"
-def label = "jenkins-${UUID.randomUUID().toString()}"
 
-podTemplate(label:label,
-
-    containers: [
-        containerTemplate(name: 'maven', image: 'maven:3.5.2-jdk-8-alpine', ttyEnabled: true, command: 'cat'),
-        containerTemplate(name: 'docker', image: 'docker', ttyEnabled: true, command: 'cat')
-    ],
-
-    volumes: [
-        hostPathVolume(hostPath: '/var/run/docker.sock', mountPath: '/var/run/docker.sock'),
-        persistentVolumeClaim(mountPath: '/root/.m2', claimName: mavenCacheVolume)
-    ]) {
- 
+pipeline {
+  agent {
+    kubernetes {
+      label 'sample-app'
+      defaultContainer 'jnlp'
+      yaml """
+apiVersion: v1
+kind: Pod
+metadata:
+labels:
+  component: ci
+spec:
+  containers:
+  - name: maven
+    image: maven:3.5.2-jdk-8-alpine
+    command:
+    - cat
+    tty: true
+    volumeMounts:
+    - name: maven
+      mountPath: /root/.m2
+  - name: docker
+    image: docker
+    command:
+    - cat
+    tty: true
+    volumeMounts:
+    - name: docker
+      mountPath: /var/run/docker.sock
+  volumes:
+  - name: maven
+    persistentVolumeClaim:
+      claimName: jenkins-release
+  - name: docker
+    hostPath:
+      path: /var/run/docker.sock
+"""
+}
+  }
+  stages {
     stage('Maven Build') {
+      steps {
         container('maven') {
-            sh 'mvn clean package -Dmaven.repo.local=/root/.m2/${JOB_NAME}'
+          sh 'mvn clean package -Dmaven.repo.local=/root/.m2/${JOB_NAME}'
         }
+      }
     }
-    
+      
     stage('Docker Build') {
+      steps {
         container('docker') {
             withCredentials([usernamePassword(credentialsId: dockerCredential, passwordVariable: 'dockerPassword', usernameVariable: 'dockerUser')]) {
                 sh 'docker login -u ' + dockerUser + ' -p ' + dockerPassword
@@ -30,6 +59,9 @@ podTemplate(label:label,
                 sh 'docker push ' + imageTag
             }
         }
+      }
     }
+      
+  }
 }
   
